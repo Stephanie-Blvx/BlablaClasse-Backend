@@ -16,7 +16,7 @@ router.get('/', (req, res) => {
 // Route pour inscrire un enseignant
 router.post('/signup', (req, res) => {
   // Vérifie si les champs requis sont présents dans la requête
-  if (!checkBody(req.body, ['firstname', 'password'])) {
+  if (!checkBody(req.body, ['email', 'password'])) {
     res.json({ result: false, error: 'Missing or empty fields' });
     return;
   }
@@ -67,7 +67,7 @@ router.delete('/:id', (req, res) => {
   // Route pour mettre à jour un teacher par son id
   router.put('/:id', (req, res) => {
     // Vérifie si les champs requis sont présents dans la requête
-    if (!checkBody(req.body, ['firstname', 'lastname', 'email'])) {
+    if (!checkBody(req.body, ['email', 'password'])) {
       return res.json({ result: false, error: 'Missing or empty fields' });
     }
   
