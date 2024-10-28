@@ -22,7 +22,7 @@ router.post('/signup', (req, res) => {
   }
 
   // Vérifie si l'enseignant existe déjà dans la base de données
-  Teacher.findOne({ firstname: req.body.firstname }).then(data => {
+  Teacher.findOne({ email: req.body.email }).then(data => {
     if (data === null) {
       // Hachage du mot de passe
       const hash = bcrypt.hashSync(req.body.password, 10);
@@ -48,6 +48,25 @@ router.post('/signup', (req, res) => {
       res.json({ result: false, error: 'Teacher already exists' });
     }
   })
+});
+
+
+router.post('/signin', (req, res) => {
+  // Vérifie si les champs requis sont présents dans la requête
+  if (!checkBody(req.body, ['email', 'password'])) {
+    res.json({ result: false, error: 'Missing or empty fields' });
+    return;
+  }
+
+  // Recherche du parent dans la base de données
+  Teacher.findOne({ email: req.body.email }).then(data => {
+    // Vérifie si le parent existe et si le mot de passe est correct
+    if (data && bcrypt.compareSync(req.body.password, data.password, )) {
+      res.json({ result: true, token: data.token, email: data.email });
+    } else {
+      res.json({ result: false, error: 'Teacher not found or wrong password' });
+    }
+  });
 });
 
 // Route pour supprimer un teacher par son id
