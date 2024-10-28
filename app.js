@@ -4,8 +4,10 @@ require('./models/connection');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+require('dotenv').config();
 
 var indexRouter = require('./routes/index');
+var postsRouter = require('./routes/posts');
 var parentsRouter = require('./routes/parents');
 var teachersRouter = require('./routes/teachers');
 var kidsRouter = require('./routes/kids');
@@ -21,6 +23,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
+app.use('/posts', postsRouter);
 app.use('/parents', parentsRouter);
 app.use('/teachers', teachersRouter);
 app.use('/kids', kidsRouter);
