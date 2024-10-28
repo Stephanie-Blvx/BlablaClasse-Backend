@@ -36,8 +36,8 @@ router.put('/:id', (req, res) => {
 
   Post.findByIdAndUpdate(
     postId,
-    { isRead }, // Utiliser la valeur de isRead fournie dans le corps de la requête
-    { new: true } // Renvoyer le document mis à jour
+    { isRead }, 
+    { new: true } 
 )
 .then(updatedPost => {
     if (updatedPost) {
