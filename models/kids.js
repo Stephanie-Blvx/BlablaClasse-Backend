@@ -13,6 +13,6 @@ classes: { type: mongoose.Schema.Types.ObjectId, ref: 'classes' },
   
 });
 
-const Kid = mongoose.model('kid', kidSchema);
+const Kid = mongoose.model('kids', kidSchema);
 
 module.exports = Kid;

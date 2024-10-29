@@ -9,7 +9,7 @@ const bcrypt = require('bcrypt');
 // Route pour récupérer tous les parents
 router.get('/', (req, res) => {
   Parent.find()
-  .populate('children') // Utilise populate pour récupérer les informations des enfants associés
+  .populate('kids') // Utilise populate pour récupérer les informations des enfants associés
     .then(parents => {
       res.json({ result: true, parents });
     })
@@ -18,7 +18,7 @@ router.get('/', (req, res) => {
 // Route pour récupérer un parent par son ID avec ses enfants associés
 router.get('/:id', (req, res) => {
   Parent.findById(req.params.id)
-    .populate('children') // Utilisation de 'populate' pour récupérer les infos des enfants
+    .populate('kids') // Utilisation de 'populate' pour récupérer les infos des enfants
     .then(parent => {
       if (parent) {
         res.json({ result: true, parent });
@@ -49,7 +49,7 @@ router.post('/signup', (req, res) => {
         email: req.body.email,
         password: hash,
         token: uid2(32),
-        children: [] // Initialisation sans enfant
+        kids: [] // Initialisation sans enfant
       });
 
       // Sauvegarde du nouveau parent dans la base de données
@@ -62,8 +62,8 @@ router.post('/signup', (req, res) => {
     }
   });
 });
+//--------------------------Route pour la connexion d'un parent-------------------------------
 
-// Route pour la connexion d'un parent
 router.post('/signin', (req, res) => {
   // Vérifie si les champs requis sont présents dans la requête
   if (!checkBody(req.body, ['email', 'password'])) {
@@ -72,19 +72,21 @@ router.post('/signin', (req, res) => {
   }
 
   // Recherche du parent dans la base de données
-  Parent.findOne({ email: req.body.email }).then(data => {
+  Parent.findOne({ email: req.body.email })
+  .populate('kids')
+  .then(data => {
+    console.log("data retournée par la database:", data);
     // Vérifie si le parent existe et si le mot de passe est correct
     if (data && bcrypt.compareSync(req.body.password, data.password, )) {
-      res.json({ result: true, token: data.token, email: data.email, children: data.children });
+      res.json({ result: true, token: data.token, email: data.email, kids: data.kids}); // la route retourne email, token, enfants du parent
     } else {
       res.json({ result: false, error: 'Parent not found or wrong password' });
     }
   });
 });
 
+//-------------------------Route pour associer un enfant existant à un parent------------
 
-
-// Route pour associer un enfant existant à un parent
 router.put('/add-child/:parentId/:childId', (req, res) => {
   Parent.findById(req.params.parentId)
     .then(parent => {
@@ -92,8 +94,8 @@ router.put('/add-child/:parentId/:childId', (req, res) => {
         res.status(404).json({ result: false, error: 'Parent not found' });
         return;
       }
-      if (!parent.children.includes(req.params.childId)) {
-        parent.children.push(req.params.childId);
+      if (!parent.kids.includes(req.params.childId)) {
+        parent.kids.push(req.params.childId);
       }
       return parent.save();
     })
@@ -102,7 +104,7 @@ router.put('/add-child/:parentId/:childId', (req, res) => {
     })
 });
 
-// Route pour mettre à jour un parent par son id
+//----------------------Route pour mettre à jour un parent par son id------------------------
 router.put('/:id', (req, res) => {
   // Vérifie si les champs requis sont présents dans la requête
   if (!checkBody(req.body, ['email', 'password'])) {
@@ -119,6 +121,7 @@ router.put('/:id', (req, res) => {
       }
     })
 });
+//----------------------Route pour mettre à jour un parent par son id----------------
 
 // Route pour supprimer un parent par son id
 router.delete('/:id', (req, res) => {

@@ -6,7 +6,7 @@ const parentSchema = mongoose.Schema({
     email: String,
     password: String,
     token: String,
-    children: [{ type: mongoose.Schema.Types.ObjectId, ref: 'kids' }], //plusieurs enfants possibles à priori donc tableau d'id kids
+    kids: [{ type: mongoose.Schema.Types.ObjectId, ref: 'kids' }], //plusieurs enfants possibles à priori donc tableau d'id kids
    });
 
 
