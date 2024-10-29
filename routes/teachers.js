@@ -13,6 +13,17 @@ router.get('/', (req, res) => {
     })
 });
 
+//Route pour récupérer tous les enseignants
+router.get('/:id', (req, res) => {
+  Teacher.find({}).then(data => {
+    if (data) {
+      res.json({ result: true, posts: data});
+    } else {
+      res.json({ result: false, error: 'No teacher Found' });
+    }
+  });
+});
+
 // Route pour inscrire un enseignant
 router.post('/signup', (req, res) => {
   // Vérifie si les champs requis sont présents dans la requête

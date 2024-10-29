@@ -6,7 +6,11 @@ const postSchema = mongoose.Schema({
   content: String,
   images: [String], //plusieurs images possibles donc tableau
   creationDate: Date,
-  author: { type: mongoose.Schema.Types.ObjectId, ref: 'teachers' },
+  author: { 
+    id: { type: mongoose.Schema.Types.ObjectId, ref: 'teachers', required: true }, 
+    username: { type: String, required: true }, 
+    firstname: { type: String, required: true } 
+  },
   classes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'classes' }], //plusieurs classes concernées possibles donc tableau d'id classes
   isRead: Boolean,
 });
