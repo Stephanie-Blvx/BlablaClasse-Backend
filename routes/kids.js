@@ -41,8 +41,8 @@ router.post('/signup', (req, res) => {
             allergies: req.body.allergies,
             habits: req.body.habits,
             additionalInfo: req.body.additionalInfo,
-            classes: req.body.classesId,
-            parents: parent._id
+             classes: req.body.classesId,
+            // parents: parent._id
         });
 
         // Sauvegarde du nouvel enfant dans la base de données

@@ -31,13 +31,13 @@ router.get('/:id', (req, res) => {
 
 // Route pour inscrire un parent
 router.post('/signup', (req, res) => {
-  if (!checkBody(req.body, ['firstname', 'password'])) {
+  if (!checkBody(req.body, ['email', 'password'])) {
     res.json({ result: false, error: 'Missing or empty fields' });
     return;
   }
 
   // Vérifie si le parent existe déjà dans la base de données
-  Parent.findOne({ firstname: req.body.firstname }).then(data => {
+  Parent.findOne({ email: req.body.email }).then(data => {
     if (data === null) {
       // Hachage du mot de passe
       const hash = bcrypt.hashSync(req.body.password, 10);
@@ -66,16 +66,16 @@ router.post('/signup', (req, res) => {
 // Route pour la connexion d'un parent
 router.post('/signin', (req, res) => {
   // Vérifie si les champs requis sont présents dans la requête
-  if (!checkBody(req.body, ['firstname', 'password'])) {
+  if (!checkBody(req.body, ['email', 'password'])) {
     res.json({ result: false, error: 'Missing or empty fields' });
     return;
   }
 
   // Recherche du parent dans la base de données
-  Parent.findOne({ firstname: req.body.firstname }).then(data => {
+  Parent.findOne({ email: req.body.email }).then(data => {
     // Vérifie si le parent existe et si le mot de passe est correct
-    if (data && bcrypt.compareSync(req.body.password, data.password)) {
-      res.json({ result: true, token: data.token });
+    if (data && bcrypt.compareSync(req.body.password, data.password, )) {
+      res.json({ result: true, token: data.token, email: data.email });
     } else {
       res.json({ result: false, error: 'Parent not found or wrong password' });
     }
@@ -105,7 +105,7 @@ router.put('/add-child/:parentId/:childId', (req, res) => {
 // Route pour mettre à jour un parent par son id
 router.put('/:id', (req, res) => {
   // Vérifie si les champs requis sont présents dans la requête
-  if (!checkBody(req.body, ['firstname', 'lastname', 'email'])) {
+  if (!checkBody(req.body, ['email', 'password'])) {
     return res.json({ result: false, error: 'Missing or empty fields' });
   }
 
