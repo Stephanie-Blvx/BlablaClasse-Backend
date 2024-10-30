@@ -26,4 +26,14 @@ router.post('/', async (req, res) => {
   }
 });
 
+router.get('/', (req, res) => {
+  Class.find({}).then(data => {
+    if (data) {
+      res.json({ result: true, classes: data});
+    } else {
+      res.json({ result: false, error: 'No classes Found' });
+    }
+  });
+});
+
 module.exports = router;

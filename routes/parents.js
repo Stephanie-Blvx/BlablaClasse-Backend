@@ -5,6 +5,7 @@ const Parent = require('../models/parents');
 const { checkBody } = require('../modules/checkBody');
 const uid2 = require('uid2');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken'); 
 
 // Route pour récupérer tous les parents
 router.get('/', (req, res) => {
@@ -78,7 +79,7 @@ router.post('/signin', (req, res) => {
     console.log("data retournée par la database:", data);
     // Vérifie si le parent existe et si le mot de passe est correct
     if (data && bcrypt.compareSync(req.body.password, data.password, )) {
-      res.json({ result: true, token: data.token, email: data.email, kids: data.kids}); // la route retourne email, token, enfants du parent
+      res.json({ result: true, token: data.token, email: data.email, lastname: data.lastname, firstname: data.firstname, kids: data.kids}); // la route retourne email, token, enfants du parent
     } else {
       res.json({ result: false, error: 'Parent not found or wrong password' });
     }
@@ -136,5 +137,74 @@ router.delete('/:id', (req, res) => {
     })
 });
 
+
+
+//---------------------- Route pour changer le mot de passe d'un parent --------------------- 
+router.put('/parents/change-password', (req, res) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1]; // Récupère le token
+
+    if (!token) return res.status(401).json({ error: "Token is missing" });
+
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
+        if (err) return res.status(403).json({ error: "Invalid token" }); // Forbidden
+
+        const parentId = user.id; // Récupérez l'ID du parent à partir du token décodé
+        const { currentPassword, newPassword } = req.body;
+
+        // Logique pour changer le mot de passe ici, par exemple :
+        Parent.findById(parentId, (err, parent) => {
+            if (err || !parent) {
+                return res.status(404).json({ error: "Parent not found" });
+            }
+
+            // Vérifiez le mot de passe actuel et changez-le
+            if (parent.password !== currentPassword) {
+                return res.status(401).json({ error: "Current password is incorrect" });
+            }
+
+            parent.password = newPassword;
+            parent.save(err => {
+                if (err) return res.status(500).json({ error: "Error saving new password" });
+                return res.json({ result: true, message: "Password changed successfully" });
+            });
+        });
+    });
+});
+
+//---------------------- Route pour changer l'email d'un parent --------------------- 
+router.put('/parents/change-email', (req, res) => {
+  const { token, newEmail } = req.body; // Extraire le token et le nouvel email du corps de la requête
+
+  // Vérifier si le token et le nouvel email sont présents
+  if (!token || !newEmail) {
+    return res.status(400).json({ result: false, error: 'Token ou nouvel email manquant' });
+  }
+
+  // Décoder le token pour obtenir l'ID du parent
+  const decoded = someTokenDecodingFunction(token); // Remplacez par la fonction appropriée
+  if (!decoded || !decoded.id) {
+    return res.status(401).json({ result: false, error: 'Token invalide' });
+  }
+
+  const parentId = decoded.id; // ID du parent extrait du token
+
+  // Vérifier si l'email est valide
+  if (!validateEmail(newEmail)) {
+    return res.status(400).json({ result: false, error: 'Email invalide' });
+  }
+
+  // Mettre à jour l'email dans la base de données
+  Parent.findByIdAndUpdate(parentId, { email: newEmail })
+    .then(() => {
+      res.status(200).json({ result: true, message: 'Email mis à jour avec succès' });
+    })
+});
+
+// Fonction pour valider l'email
+function validateEmail(email) {
+  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // Expression régulière pour valider l'email
+  return re.test(email);
+}
 
 module.exports = router;
