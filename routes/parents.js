@@ -88,19 +88,13 @@ router.post('/signin', (req, res) => {
 //--------------------------Route pour la connexion d'un parent avec token-------------------------------
 
 router.post('/signintoken', (req, res) => { //récupère un objet JSON = req.body = chaîne de caractères du QR code
-
-    // Parent.findOne({ email: req.body.email }) remplacé par :
-  
-  const  QRdata= JSON.parse(req.body); //transformer texte du req.body en objet JS
-  console.log('QRdata', QRdata);  // console.log l'objet JS
-
-  Parent.findOne({ email: QRdata.email }) // Recherche du parent par son email dans la base de données
- 
+console.log('req.body', req.body);
+    Parent.findOne({ email: req.body.email })    
   .populate('kids') //peuple le champ kids
-  .then(data => {
-    console.log("data retournée par la database:", data);  // console.log la réponse de la database
-    if (data && data.token === QRdata.token ) {
-      res.json({ result: true, token: data.token, email: data.email, lastname: data.lastname, firstname: data.firstname, kids: data.kids}); // la route retourne email, token, enfants du parent
+  .then(dbData => {
+    console.log("data retournée par la database:", dbData);  // console.log la réponse de la database
+    if (dbData && dbData.token === req.body.token ) {
+      res.json({ result: true, token: dbData.token, email: dbData.email, lastname: dbData.lastname, firstname: dbData.firstname, kids: dbData.kids}); // la route retourne email, token, enfants du parent
     } else {
       res.json({ result: false, error: 'Parent not found or wrong information' });
     }
