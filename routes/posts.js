@@ -51,4 +51,42 @@ router.put('/:id', (req, res) => {
 });
 });
 
+// Route DELETE pour supprimer un post par son id
+router.delete('/:id', (req, res) => {
+  const postId = req.params.id;
+
+  Post.findByIdAndDelete(postId)
+      .then(deletedPost => {
+          if (deletedPost) {
+              res.json({ success: true, message: 'Post deleted successfully', post: deletedPost });
+          } else {
+              res.status(404).json({ success: false, error: 'Post not found' });
+          }
+      })
+});
+
+// Route POST pour créer un nouveau post
+router.post('/', (req, res) => {
+  const { title, content, author, images } = req.body;
+
+  if (!title || !content || !author) {
+      return res.status(400).json({ success: false, error: 'Title, content, and author are required' });
+  }
+
+  const newPost = new Post({
+      title,
+      content,
+      author,
+      images: images || [],  // par défaut à un tableau vide si non fourni
+      creationDate: new Date(),
+      isRead: false,        
+  });
+
+  newPost.save()
+      .then(savedPost => {
+          res.json({ success: true, post: savedPost });
+      })
+});
+
+
 module.exports = router;
