@@ -6,37 +6,38 @@ const Event = require('../models/events');
 // Route pour créer un event
 
 router.post('/', (req, res) => {
-   
-  
-  
-              // Création d'un new Event
-          const newEvent = new Event({
-             
-              description: req.body.description,
-              date: req.body.date,
-              classes: req.body.classe,
-          });
-  
-          newEvent.save().then(newDoc => {
-          res.json({ result: true, event: newDoc });
-    })
-  
-  
-  
+
+
+
+  // Création d'un new Event
+  const newEvent = new Event({
+    classe: req.body.classe,
+    date: req.body.date,
+    description: req.body.description,
+
+
   });
+
+  newEvent.save().then(newDoc => {
+    res.json({ result: true, event: newDoc });
+  })
+
+
+
+});
 
 
 // route pour récupérer tous les events
 router.get('/', (req, res) => {
-    Event.find().populate('classes').then(data => {
-      
-        res.json({ result: true, events: data});
-      
-      })
-    });
-  
+  Event.find().populate('classe').then(events => {
 
- 
+    res.json({ result: true, events });
+
+  })
+});
+
+
+
 
 
 module.exports = router;
