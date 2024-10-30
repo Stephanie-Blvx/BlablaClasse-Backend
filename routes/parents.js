@@ -63,7 +63,7 @@ router.post('/signup', (req, res) => {
     }
   });
 });
-//--------------------------Route pour la connexion d'un parent-------------------------------
+//--------------------------Route pour la connexion d'un parent avec password-------------------------------
 
 router.post('/signin', (req, res) => {
   // Vérifie si les champs requis sont présents dans la requête
@@ -85,7 +85,27 @@ router.post('/signin', (req, res) => {
     }
   });
 });
+//--------------------------Route pour la connexion d'un parent avec token-------------------------------
 
+router.post('/signintoken', (req, res) => { //récupère un objet JSON = req.body = chaîne de caractères du QR code
+
+    // Parent.findOne({ email: req.body.email }) remplacé par :
+  
+  const  QRdata= JSON.parse(req.body); //transformer texte du req.body en objet JS
+  console.log('QRdata', QRdata);  // console.log l'objet JS
+
+  Parent.findOne({ email: QRdata.email }) // Recherche du parent par son email dans la base de données
+ 
+  .populate('kids') //peuple le champ kids
+  .then(data => {
+    console.log("data retournée par la database:", data);  // console.log la réponse de la database
+    if (data && data.token === QRdata.token ) {
+      res.json({ result: true, token: data.token, email: data.email, lastname: data.lastname, firstname: data.firstname, kids: data.kids}); // la route retourne email, token, enfants du parent
+    } else {
+      res.json({ result: false, error: 'Parent not found or wrong information' });
+    }
+  });
+});
 //-------------------------Route pour associer un enfant existant à un parent------------
 
 router.put('/add-child/:parentId/:childId', (req, res) => {
@@ -106,6 +126,7 @@ router.put('/add-child/:parentId/:childId', (req, res) => {
 });
 
 //----------------------Route pour mettre à jour un parent par son id------------------------
+
 router.put('/:id', (req, res) => {
   // Vérifie si les champs requis sont présents dans la requête
   if (!checkBody(req.body, ['email', 'password'])) {
@@ -140,6 +161,7 @@ router.delete('/:id', (req, res) => {
 
 
 //---------------------- Route pour changer le mot de passe d'un parent --------------------- 
+
 router.put('/parents/change-password', (req, res) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1]; // Récupère le token
@@ -173,6 +195,7 @@ router.put('/parents/change-password', (req, res) => {
 });
 
 //---------------------- Route pour changer l'email d'un parent --------------------- 
+
 router.put('/parents/change-email', (req, res) => {
   const { token, newEmail } = req.body; // Extraire le token et le nouvel email du corps de la requête
 
