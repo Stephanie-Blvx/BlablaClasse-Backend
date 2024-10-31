@@ -73,7 +73,7 @@ router.post('/signin', (req, res) => {
   Teacher.findOne({ email: req.body.email }).then(data => {
     // Vérifie si le parent existe et si le mot de passe est correct
     if (data && bcrypt.compareSync(req.body.password, data.password, )) {
-      res.json({ result: true, token: data.token, email: data.email });
+      res.json({ result: true, token: data.token, email: data.email, lastname: data.lastname, firstname: data.firstname, username: data.username, classes: data.classes });
     } else {
       res.json({ result: false, error: 'Teacher not found or wrong password' });
     }
