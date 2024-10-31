@@ -8,7 +8,7 @@ birthdate: Date,
 allergies: String,
 habits: String,
 additionalInfo: String,
-classes: { type: mongoose.Schema.Types.ObjectId, ref: 'classes' },
+classes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'classes' }],
 // parents: { type: mongoose.Schema.Types.ObjectId, ref: 'parents' },
   
 });
