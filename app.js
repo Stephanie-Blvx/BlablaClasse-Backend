@@ -11,10 +11,16 @@ var teachersRouter = require('./routes/teachers');
 var kidsRouter = require('./routes/kids');
 var eventsRouter = require('./routes/events');
 var classesRouter = require('./routes/classes');
+var menusRouter = require('./routes/menus');
+
+
 
 var app = express();
 const cors = require('cors');
 app.use(cors());
+
+const fileUpload = require('express-fileupload');
+app.use(fileUpload());
 
 app.use(logger('dev'));
 app.use(express.json());
@@ -29,4 +35,6 @@ app.use('/teachers', teachersRouter);
 app.use('/kids', kidsRouter);
 app.use('/events', eventsRouter);
 app.use('/classes', classesRouter);
+app.use('/menus', menusRouter);
+
 module.exports = app;
