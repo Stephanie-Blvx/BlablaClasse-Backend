@@ -1,44 +1,43 @@
-var express = require('express');
+var express = require("express");
 var router = express.Router();
-const Parent = require('../models/parents');
- const Kid = require('../models/kids');
-const { checkBody } = require('../modules/checkBody');
-const uid2 = require('uid2');
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken'); 
+const Parent = require("../models/parents");
+const Kid = require("../models/kids");
+const { checkBody } = require("../modules/checkBody");
+const uid2 = require("uid2");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
-// Route pour récupérer tous les parents
-router.get('/', (req, res) => {
+//-------------------------  Route pour récupérer tous les parents -------------------------
+router.get("/", (req, res) => {
   Parent.find()
-  .populate('kids') // Utilise populate pour récupérer les informations des enfants associés
-    .then(parents => {
+    .populate("kids") // Utilise populate pour récupérer les informations des enfants associés
+    .then((parents) => {
       res.json({ result: true, parents });
-    })
+    });
 });
 
-// Route pour récupérer un parent par son ID avec ses enfants associés
-router.get('/:id', (req, res) => {
+//-------------------------  Route pour récupérer un parent par son ID avec ses enfants associés --------------
+router.get("/:id", (req, res) => {
   Parent.findById(req.params.id)
-    .populate('kids') // Utilisation de 'populate' pour récupérer les infos des enfants
-    .then(parent => {
+    .populate("kids") // Utilisation de 'populate' pour récupérer les infos des enfants
+    .then((parent) => {
       if (parent) {
         res.json({ result: true, parent });
       } else {
-        res.status(404).json({ result: false, error: 'Parent not found' });
+        res.status(404).json({ result: false, error: "Parent not found" });
       }
-    })
+    });
 });
 
-
-// Route pour inscrire un parent
-router.post('/signup', (req, res) => {
-  if (!checkBody(req.body, ['email', 'password'])) {
-    res.json({ result: false, error: 'Missing or empty fields' });
+//-------------------------  Route pour inscrire un parent -------------------------
+router.post("/signup", (req, res) => {
+  if (!checkBody(req.body, ["email", "password"])) {
+    res.json({ result: false, error: "Missing or empty fields" });
     return;
   }
 
   // Vérifie si le parent existe déjà dans la base de données
-  Parent.findOne({ email: req.body.email }).then(data => {
+  Parent.findOne({ email: req.body.email }).then((data) => {
     if (data === null) {
       // Hachage du mot de passe
       const hash = bcrypt.hashSync(req.body.password, 10);
@@ -50,161 +49,213 @@ router.post('/signup', (req, res) => {
         email: req.body.email,
         password: hash,
         token: uid2(32),
-        kids: [] // Initialisation sans enfant
+        kids: [], // Initialisation sans enfant
+        userType: "parent", // Ajouter userType comme 'parent'
       });
 
       // Sauvegarde du nouveau parent dans la base de données
-      newParent.save().then(newDoc => {
+      newParent.save().then((newDoc) => {
         res.json({ result: true, token: newDoc.token });
       });
     } else {
       // Si le parent existe déjà dans la bdd
-      res.json({ result: false, error: 'Parent already exists' });
+      res.json({ result: false, error: "Parent already exists" });
     }
   });
 });
-//--------------------------Route pour la connexion d'un parent-------------------------------
 
-router.post('/signin', (req, res) => {
+//--------------------------Route pour la connexion d'un parent-------------------------------
+router.post("/signin", (req, res) => {
   // Vérifie si les champs requis sont présents dans la requête
-  if (!checkBody(req.body, ['email', 'password'])) {
-    res.json({ result: false, error: 'Missing or empty fields' });
+  if (!checkBody(req.body, ["email", "password"])) {
+    res.json({ result: false, error: "Missing or empty fields" });
     return;
   }
 
   // Recherche du parent dans la base de données
-  Parent.findOne({ email: req.body.email })
-  .populate('kids')
-  .then(data => {
-    console.log("data retournée par la database:", data);
-    // Vérifie si le parent existe et si le mot de passe est correct
-    if (data && bcrypt.compareSync(req.body.password, data.password, )) {
-      res.json({ result: true, token: data.token, email: data.email, lastname: data.lastname, firstname: data.firstname, kids: data.kids}); // la route retourne email, token, enfants du parent
-    } else {
-      res.json({ result: false, error: 'Parent not found or wrong password' });
-    }
-  });
-});
-
-//-------------------------Route pour associer un enfant existant à un parent------------
-
-router.put('/add-child/:parentId/:childId', (req, res) => {
-  Parent.findById(req.params.parentId)
-    .then(parent => {
-      if (!parent) {
-        res.status(404).json({ result: false, error: 'Parent not found' });
-        return;
-      }
-      if (!parent.kids.includes(req.params.childId)) {
-        parent.kids.push(req.params.childId);
-      }
-      return parent.save();
-    })
-    .then(updatedParent => {
-      res.json({ result: true, parent: updatedParent });
-    })
-});
-
-//----------------------Route pour mettre à jour un parent par son id------------------------
-router.put('/:id', (req, res) => {
-  // Vérifie si les champs requis sont présents dans la requête
-  if (!checkBody(req.body, ['email', 'password'])) {
-    return res.json({ result: false, error: 'Missing or empty fields' });
-  }
-
-  // Recherche et mise à jour du parent par son id
-  Parent.findByIdAndUpdate(req.params.id, req.body, { new: true })
-    .then(updatedParent => {
-      if (updatedParent) {
-        res.json({ result: true, parent: updatedParent });
+  Parent.findOne({ email: req.body.email }) // Recherche du parent par son email
+    .populate("kids") // Utilisation de 'populate' pour récupérer les informations des enfants associés
+    .then((data) => {
+      // data est le parent trouvé
+      console.log("data retournée par la database:", data);
+      // Vérifie si le parent existe et si le mot de passe est correct
+      if (data && bcrypt.compareSync(req.body.password, data.password)) {
+        // Vérifie si le parent existe et si le mot de passe est correct
+        res.json({
+          result: true,
+          token: data.token,
+          email: data.email,
+          lastname: data.lastname,
+          firstname: data.firstname,
+          id: data.id,
+          kids: data.kids,
+          userType: data.userType, // Inclure le type d'utilisateur dans la réponse
+        }); // la route retourne email, token, enfants du parent
       } else {
-        res.json({ result: false, error: 'Parent not found' });
-      }
-    })
-});
-//----------------------Route pour mettre à jour un parent par son id----------------
-
-// Route pour supprimer un parent par son id
-router.delete('/:id', (req, res) => {
-  // Recherche et suppression du parent par son id
-  Parent.findByIdAndDelete(req.params.id)
-    .then(deletedParent => {
-      if (deletedParent) {
-        res.json({ result: true, message: 'Parent deleted successfully' });
-      } else {
-        res.json({ result: false, error: 'Parent not found' });
-      }
-    })
-});
-
-
-
-//---------------------- Route pour changer le mot de passe d'un parent --------------------- 
-router.put('/parents/change-password', (req, res) => {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1]; // Récupère le token
-
-    if (!token) return res.status(401).json({ error: "Token is missing" });
-
-    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
-        if (err) return res.status(403).json({ error: "Invalid token" }); // Forbidden
-
-        const parentId = user.id; // Récupérez l'ID du parent à partir du token décodé
-        const { currentPassword, newPassword } = req.body;
-
-        // Logique pour changer le mot de passe ici, par exemple :
-        Parent.findById(parentId, (err, parent) => {
-            if (err || !parent) {
-                return res.status(404).json({ error: "Parent not found" });
-            }
-
-            // Vérifiez le mot de passe actuel et changez-le
-            if (parent.password !== currentPassword) {
-                return res.status(401).json({ error: "Current password is incorrect" });
-            }
-
-            parent.password = newPassword;
-            parent.save(err => {
-                if (err) return res.status(500).json({ error: "Error saving new password" });
-                return res.json({ result: true, message: "Password changed successfully" });
-            });
+        // Si le parent n'est pas trouvé ou si le mot de passe est incorrect
+        res.json({
+          result: false,
+          error: "Parent not found or wrong password",
         });
+      }
     });
 });
 
-//---------------------- Route pour changer l'email d'un parent --------------------- 
-router.put('/parents/change-email', (req, res) => {
-  const { token, newEmail } = req.body; // Extraire le token et le nouvel email du corps de la requête
-
-  // Vérifier si le token et le nouvel email sont présents
-  if (!token || !newEmail) {
-    return res.status(400).json({ result: false, error: 'Token ou nouvel email manquant' });
-  }
-
-  // Décoder le token pour obtenir l'ID du parent
-  const decoded = someTokenDecodingFunction(token); // Remplacez par la fonction appropriée
-  if (!decoded || !decoded.id) {
-    return res.status(401).json({ result: false, error: 'Token invalide' });
-  }
-
-  const parentId = decoded.id; // ID du parent extrait du token
-
-  // Vérifier si l'email est valide
-  if (!validateEmail(newEmail)) {
-    return res.status(400).json({ result: false, error: 'Email invalide' });
-  }
-
-  // Mettre à jour l'email dans la base de données
-  Parent.findByIdAndUpdate(parentId, { email: newEmail })
-    .then(() => {
-      res.status(200).json({ result: true, message: 'Email mis à jour avec succès' });
+//-------------------------Route pour associer un enfant existant à un parent------------
+router.put("/add-child/:parentId/:kidId", (req, res) => {
+  Parent.findById(req.params.parentId) // Recherche du parent par son ID
+    .then((parent) => {
+      // parent est le parent trouvé
+      if (!parent) {
+        // Si le parent n'est pas trouvé
+        res.status(404).json({ result: false, error: "Parent not found" });
+        return;
+      }
+      if (!parent.kids.includes(req.params.kidId)) {
+        // Si l'enfant n'est pas déjà associé au parent
+        parent.kids.push(req.params.kidId); // Ajoutez l'ID de l'enfant à la liste des enfants du parent
+      }
+      return parent.save(); // Sauvegarde les modifications
     })
+    .then((updatedParent) => {
+      // updatedParent est le parent mis à jour
+      res.json({ result: true, parent: updatedParent }); // Retourne le parent mis à jour
+    });
 });
 
-// Fonction pour valider l'email
-function validateEmail(email) {
-  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // Expression régulière pour valider l'email
-  return re.test(email);
-}
+//----------------------Route pour mettre à jour un parent par son id------------------------
+// router.put('/:id', (req, res) => {
+//   // Vérifie si les champs requis sont présents dans la requête
+//   if (!checkBody(req.body, ['email', 'password'])) {
+//     return res.json({ result: false, error: 'Missing or empty fields' });
+//   }
+
+//   // Recherche et mise à jour du parent par son id
+//   Parent.findByIdAndUpdate(req.params.id, req.body, { new: true })
+//     .then(updatedParent => {
+//       if (updatedParent) {
+//         res.json({ result: true, parent: updatedParent });
+//       } else {
+//         res.json({ result: false, error: 'Parent not found' });
+//       }
+//     })
+// });
+//----------------------Route pour mettre à jour un parent par son id----------------
+
+//-------------------------  Route pour supprimer un parent par son id -------------------------
+router.delete("/:id", (req, res) => {
+  // Recherche et suppression du parent par son id
+  Parent.findByIdAndDelete(req.params.id) // Recherche et suppression du parent par son id
+    .then((deletedParent) => {
+      // deletedParent est le parent supprimé
+      if (deletedParent) {
+        // Si le parent est trouvé et supprimé
+        res.json({ result: true, message: "Parent deleted successfully" });
+      } else {
+        // Si le parent n'est pas trouvé
+        res.json({ result: false, error: "Parent not found" });
+      }
+    });
+});
+
+//---------------------- Route pour changer le mot de passe d'un parent ---------------------
+router.put("/change-password", (req, res) => {
+  const { parentId, currentPassword, newPassword } = req.body; // Récupère l'ID du parent, le mot de passe actuel et le nouveau mot de passe
+  const authToken = req.headers["authorization"]?.split(" ")[1]; // Récupère le token
+
+  // Vérifiez que l'ID, le mot de passe actuel et le nouveau mot de passe sont présents
+  if (!parentId || !currentPassword || !newPassword) {
+    return res
+      .status(400)
+      .json({ result: false, error: "Informations manquantes" });
+  }
+
+  // Trouver le parent par son ID
+  Parent.findById(parentId) // Recherche du parent par son ID
+    .then((parent) => {
+      // parent est le parent trouvé
+      if (!parent) {
+        // Si le parent n'est pas trouvé
+        return res
+          .status(404)
+          .json({ result: false, error: "Parent non trouvé" });
+      }
+
+      // Vérifiez si le token est correct
+      if (parent.token !== authToken) {
+        // Si le token ne correspond pas à celui du parent
+        return res.status(401).json({ result: false, error: "Token invalide" });
+      }
+
+      // Vérifiez le mot de passe actuel
+      if (!bcrypt.compareSync(currentPassword, parent.password)) {
+        return res
+          .status(401)
+          .json({ result: false, error: "Mot de passe actuel incorrect" });
+      }
+
+      // Hachage du nouveau mot de passe
+      parent.password = bcrypt.hashSync(newPassword, 10); // Hache le nouveau mot de passe
+      return parent.save(); // Sauvegarde les modifications
+    })
+    .then(() =>
+      res
+        .status(200)
+        .json({ result: true, message: "Mot de passe mis à jour avec succès" })
+    )
+    .catch(() =>
+      res.status(500).json({
+        result: false,
+        error: "Erreur lors de la mise à jour du mot de passe",
+      })
+    );
+});
+
+//---------------------- Route pour changer l'email d'un parent ---------------------
+router.put("/change-email", (req, res) => {
+  const { parentId, newEmail } = req.body; // Récupère l'ID du parent et le nouvel email
+  console.log("Données reçues:", req.body);
+  const authToken = req.headers["authorization"]?.split(" ")[1]; // Récupère le token
+
+  console.log("Token reçu:", authToken); // Log du token reçu
+  // Vérifiez que l'ID et l'email sont présents
+  if (!parentId || !newEmail) {
+    return res
+      .status(400)
+      .json({ result: false, error: "Informations manquantes" });
+  }
+
+  // Trouver le parent par son ID
+  Parent.findById(parentId) // Recherche du parent par son ID
+    .then((parent) => {
+      // parent est le parent trouvé
+      if (!parent) {
+        // Si le parent n'est pas trouvé
+        return res
+          .status(404)
+          .json({ result: false, error: "Parent non trouvé" });
+      }
+
+      // Vérifiez si le token est correct
+      if (parent.token !== authToken) {
+        // Si le token ne correspond pas à celui du parent
+        return res.status(401).json({ result: false, error: "Token invalide" });
+      }
+
+      parent.email = newEmail; // Mettre à jour l'email du parent
+      return parent.save(); // Sauvegarde les modifications
+    })
+    .then(() =>
+      res
+        .status(200)
+        .json({ result: true, message: "Email mis à jour avec succès" })
+    )
+    .catch(() =>
+      res.status(500).json({
+        result: false,
+        error: "Erreur lors de la mise à jour de l'email",
+      })
+    );
+});
 
 module.exports = router;
