@@ -77,7 +77,7 @@ router.post('/', (req, res) => {
       title,
       content,
       author,
-      images: images || [],  // par défaut à un tableau vide si non fourni
+      images: images || [],  
       creationDate: new Date(),
       isRead: false,        
   });
