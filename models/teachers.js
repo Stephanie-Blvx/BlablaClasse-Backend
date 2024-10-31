@@ -8,6 +8,7 @@ const teacherSchema = mongoose.Schema({
     password: String,
     token: String,
     isAdmin: Boolean,
+    userType: { type: String, default: "teacher" },
     classes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'class' }],//plusieurs kids donc tableau d'id kids
 
 });
