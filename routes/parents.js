@@ -5,7 +5,6 @@ const Kid = require("../models/kids");
 const { checkBody } = require("../modules/checkBody");
 const uid2 = require("uid2");
 const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
 
 //-------------------------  Route pour récupérer tous les parents -------------------------
 router.get("/", (req, res) => {
