@@ -27,28 +27,31 @@ router.get('/', (req, res) => {
 // route pour mettre à jour l'état de isRead (checkBox)
 router.put('/:id', (req, res) => {
   const postId = req.params.id;
-  const { isRead } = req.body;
+  const { isRead, content } = req.body;
 
-  // Vérification si isRead est fourni
-  if (isRead === undefined) {
-      return res.status(400).json({ success: false, error: 'isRead must be provided' });
+  // Préparer l'objet de mise à jour avec uniquement les champs fournis
+  const updateFields = {};
+  if (isRead !== undefined) updateFields.isRead = isRead;
+  if (content !== undefined) updateFields.content = content;
+
+  // Vérification qu'au moins un champ est fourni
+  if (Object.keys(updateFields).length === 0) {
+      return res.status(400).json({ success: false, error: 'rien à mettre à jour.' });
   }
 
+  // Mise à jour du post en fonction des champs fournis
   Post.findByIdAndUpdate(
-    postId,
-    { isRead }, 
-    { new: true } 
-)
-.then(updatedPost => {
-    if (updatedPost) {
-        res.json({ success: true, post: updatedPost }); // Retourner le post mis à jour
-    } else {
-        res.status(404).json({ success: false, error: 'Post not found' }); // Post non trouvé
-    }
-})
-.catch(err => {
-    res.status(500).json({ success: false, error: 'Server error', details: err.message }); // Gérer les erreurs
-});
+      postId,
+      updateFields,
+      { new: true }  
+  )
+  .then(updatedPost => {
+      if (updatedPost) {
+          res.json({ success: true, post: updatedPost }); // Retourner le post mis à jour
+      } else {
+          res.status(404).json({ success: false, error: 'Post not found' }); // Post non trouvé
+      }
+  })
 });
 
 // Route DELETE pour supprimer un post par son id
