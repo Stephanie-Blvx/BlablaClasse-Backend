@@ -5,7 +5,6 @@ const Kid = require("../models/kids");
 const { checkBody } = require("../modules/checkBody");
 const uid2 = require("uid2");
 const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
 
 //-------------------------  Route pour récupérer tous les parents -------------------------
 router.get("/", (req, res) => {
@@ -100,7 +99,22 @@ router.post("/signin", (req, res) => {
       }
     });
 });
+//--------------------------Route pour la connexion d'un parent par token-------------------------------
 
+router.post('/signintoken', (req, res) => { //récupère un objet JSON = req.body = chaîne de caractères du QR code
+  console.log('req.body', req.body);
+      Parent.findOne({ token: req.body.token })    
+    .populate('kids') //peuple le champ kids
+    .then(dbData => {
+      console.log("data retournée par la database:", dbData);  // console.log la réponse de la database
+      if (dbData ) {
+        res.json({ result: true, token: dbData.token, email: dbData.email, lastname: dbData.lastname, firstname: dbData.firstname, kids: dbData.kids}); // la route retourne email, token, enfants du parent
+      } else {
+        res.json({ result: false, error: 'Parent not found or wrong information' });
+      }
+    })
+  })
+  
 //-------------------------Route pour associer un enfant existant à un parent------------
 router.put("/add-child/:parentId/:kidId", (req, res) => {
   Parent.findById(req.params.parentId) // Recherche du parent par son ID
