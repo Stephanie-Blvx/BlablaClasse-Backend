@@ -89,6 +89,30 @@ router.post("/signin", (req, res) => {
     }
   });
 });
+//---------------------- Route pour connecter un enseignant avec son token (QR Code reader)---------------------
+router.post("/signintoken", (req, res) => {
+  
+  Teacher.findOne({ token: req.body.token }) // Vérifie si le token existe dans la Collection Teachers
+    // .populate('classes') //peuple le champ classes
+    .then((data) => {
+    if (data) {
+      res.json({
+        result: true,
+        token: data.token,
+        email: data.email,
+        lastname: data.lastname,
+        firstname: data.firstname,
+        username: data.username,
+        classes: data.classes,
+        id: data.id,
+        userType: data.userType,
+      });
+    } else {
+      res.json({ result: false, error: "Teacher not found with scanned token" });
+    }
+  });
+});
+
 
 //---------------------- Route pour supprimer un teacher par son id ---------------------
 router.delete("/:id", (req, res) => { 
