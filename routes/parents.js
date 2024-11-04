@@ -1,10 +1,13 @@
 var express = require("express");
 var router = express.Router();
 const Parent = require("../models/parents");
-const Kid = require("../models/kids");
 const { checkBody } = require("../modules/checkBody");
 const uid2 = require("uid2");
 const bcrypt = require("bcrypt");
+const authMiddleware = require('../middlewares/authMiddleware');
+const validateCurrentPassword = require('../middlewares/validateCurrentPassword');
+const jwt = require('jsonwebtoken');
+const { token } = require("morgan");
 
 //-------------------------  Route pour récupérer tous les parents -------------------------
 router.get("/", (req, res) => {
@@ -47,6 +50,7 @@ router.post("/signup", (req, res) => {
         lastname: req.body.lastname,
         email: req.body.email,
         password: hash,
+        username: req.body.username,
         token: uid2(32),
         kids: [], // Initialisation sans enfant
         userType: "parent", // Ajouter userType comme 'parent'
@@ -79,17 +83,35 @@ router.post("/signin", (req, res) => {
       console.log("data retournée par la database:", data);
       // Vérifie si le parent existe et si le mot de passe est correct
       if (data && bcrypt.compareSync(req.body.password, data.password)) {
+
+        const accessToken = jwt.sign({ id: data._id, email: data.email }, process.env.JWT_SECRET, { expiresIn: '24h' });
+
+        data.save().then(() => {
+          // Envoie les tokens au client
+          res.json({
+            result: true,
+            accessToken,
+            token: data.token,
+            email: data.email,
+            lastname: data.lastname,
+            firstname: data.firstname,
+            id: data.id,
+            kids: data.kids,
+            username: data.username,
+            userType: data.userType, // Inclure le type d'utilisateur dans la réponse
+          });
+        });
         // Vérifie si le parent existe et si le mot de passe est correct
-        res.json({
-          result: true,
-          token: data.token,
-          email: data.email,
-          lastname: data.lastname,
-          firstname: data.firstname,
-          id: data.id,
-          kids: data.kids,
-          userType: data.userType, // Inclure le type d'utilisateur dans la réponse
-        }); // la route retourne email, token, enfants du parent
+        // res.json({
+        //   result: true,
+        //   token: data.token,
+        //   email: data.email,
+        //   lastname: data.lastname,
+        //   firstname: data.firstname,
+        //   id: data.id,
+        //   kids: data.kids,
+        //   userType: data.userType, // Inclure le type d'utilisateur dans la réponse
+        // }); // la route retourne email, token, enfants du parent
       } else {
         // Si le parent n'est pas trouvé ou si le mot de passe est incorrect
         res.json({
@@ -173,58 +195,88 @@ router.delete("/:id", (req, res) => {
 });
 
 //---------------------- Route pour changer le mot de passe d'un parent ---------------------
-router.put("/change-password", (req, res) => {
-  const { parentId, currentPassword, newPassword } = req.body; // Récupère l'ID du parent, le mot de passe actuel et le nouveau mot de passe
-  const authToken = req.headers["authorization"]?.split(" ")[1]; // Récupère le token
+// router.put("/change-password", (req, res) => {
+//   const { parentId, currentPassword, newPassword } = req.body; // Récupère l'ID du parent, le mot de passe actuel et le nouveau mot de passe
+//   const authToken = req.headers["authorization"]?.split(" ")[1]; // Récupère le token
 
-  // Vérifiez que l'ID, le mot de passe actuel et le nouveau mot de passe sont présents
-  if (!parentId || !currentPassword || !newPassword) {
-    return res
-      .status(400)
-      .json({ result: false, error: "Informations manquantes" });
-  }
+//   // Vérifiez que l'ID, le mot de passe actuel et le nouveau mot de passe sont présents
+//   if (!parentId || !currentPassword || !newPassword) {
+//     return res
+//       .status(400)
+//       .json({ result: false, error: "Informations manquantes" });
+//   }
 
-  // Trouver le parent par son ID
-  Parent.findById(parentId) // Recherche du parent par son ID
-    .then((parent) => {
-      // parent est le parent trouvé
-      if (!parent) {
-        // Si le parent n'est pas trouvé
-        return res
-          .status(404)
-          .json({ result: false, error: "Parent non trouvé" });
-      }
+//   // Trouver le parent par son ID
+//   Parent.findById(parentId) // Recherche du parent par son ID
+//     .then((parent) => {
+//       // parent est le parent trouvé
+//       if (!parent) {
+//         // Si le parent n'est pas trouvé
+//         return res
+//           .status(404)
+//           .json({ result: false, error: "Parent non trouvé" });
+//       }
 
-      // Vérifiez si le token est correct
-      if (parent.token !== authToken) {
-        // Si le token ne correspond pas à celui du parent
-        return res.status(401).json({ result: false, error: "Token invalide" });
-      }
+//       // Vérifiez si le token est correct
+//       if (parent.token !== authToken) {
+//         // Si le token ne correspond pas à celui du parent
+//         return res.status(401).json({ result: false, error: "Token invalide" });
+//       }
 
-      // Vérifiez le mot de passe actuel
-      if (!bcrypt.compareSync(currentPassword, parent.password)) {
-        return res
-          .status(401)
-          .json({ result: false, error: "Mot de passe actuel incorrect" });
-      }
+//       // Vérifiez le mot de passe actuel
+//       if (!bcrypt.compareSync(currentPassword, parent.password)) {
+//         return res
+//           .status(401)
+//           .json({ result: false, error: "Mot de passe actuel incorrect" });
+//       }
 
-      // Hachage du nouveau mot de passe
-      parent.password = bcrypt.hashSync(newPassword, 10); // Hache le nouveau mot de passe
-      return parent.save(); // Sauvegarde les modifications
+//       // Hachage du nouveau mot de passe
+//       parent.password = bcrypt.hashSync(newPassword, 10); // Hache le nouveau mot de passe
+//       return parent.save(); // Sauvegarde les modifications
+//     })
+//     .then(() =>
+//       res
+//         .status(200)
+//         .json({ result: true, message: "Mot de passe mis à jour avec succès" })
+//     )
+//     .catch(() =>
+//       res.status(500).json({
+//         result: false,
+//         error: "Erreur lors de la mise à jour du mot de passe",
+//       })
+//     );
+// });
+console.log('Bonjour')
+// router.put('/change-password', authMiddleware, validateCurrentPassword, async (req, res) => {
+//   const { newPassword } = req.body;
+
+//   console.log('Nouveau mot de passe' + newPassword);
+//   try {
+//     req.parent.password = await bcrypt.hash(newPassword, 5);
+//     await req.parent.save();
+//     res.status(200).json({ result: true, message: 'Mot de passe mis à jour avec succès' });
+//   } catch (error) {
+//     res.status(500).json({ result: false, error: 'Erreur lors de la mise à jour du mot de passe' });
+//   }
+// });
+
+router.put('/change-password', authMiddleware, validateCurrentPassword, (req, res) => {
+  const { newPassword } = req.body;
+
+  console.log('Nouveau mot de passe' + newPassword);
+
+  bcrypt.hash(newPassword, 5)
+    .then((hashedPassword) => {
+      req.parent.password = hashedPassword;
+      return req.parent.save();
     })
-    .then(() =>
-      res
-        .status(200)
-        .json({ result: true, message: "Mot de passe mis à jour avec succès" })
-    )
-    .catch(() =>
-      res.status(500).json({
-        result: false,
-        error: "Erreur lors de la mise à jour du mot de passe",
-      })
-    );
+    .then(() => {
+      res.status(200).json({ result: true, message: 'Mot de passe mis à jour avec succès' });
+    })
+    .catch((error) => {
+      res.status(500).json({ result: false, error: 'Erreur lors de la mise à jour du mot de passe' });
+    });
 });
-
 //---------------------- Route pour changer l'email d'un parent ---------------------
 router.put("/change-email", (req, res) => {
   const { parentId, newEmail } = req.body; // Récupère l'ID du parent et le nouvel email
