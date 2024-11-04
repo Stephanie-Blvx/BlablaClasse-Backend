@@ -12,7 +12,7 @@ var kidsRouter = require('./routes/kids');
 var eventsRouter = require('./routes/events');
 var classesRouter = require('./routes/classes');
 var menusRouter = require('./routes/menus');
-
+var tchatRouter = require('.../routes/tchat'); 
 
 
 var app = express();
@@ -36,5 +36,7 @@ app.use('/kids', kidsRouter);
 app.use('/events', eventsRouter);
 app.use('/classes', classesRouter);
 app.use('/menus', menusRouter);
+app.use('/tchat', tchatRouter); 
+
 
 module.exports = app;

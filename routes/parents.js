@@ -108,7 +108,7 @@ router.post('/signintoken', (req, res) => { //récupère un objet JSON = req.bod
     .then(dbData => {
       console.log("data retournée par la database:", dbData);  // console.log la réponse de la database
       if (dbData ) {
-        res.json({ result: true, token: dbData.token, email: dbData.email, lastname: dbData.lastname, firstname: dbData.firstname, kids: dbData.kids}); // la route retourne email, token, enfants du parent
+        res.json({ result: true, token: dbData.token, email: dbData.email, lastname: dbData.lastname, firstname: dbData.firstname, kids: dbData.kids}); // la route retourne email, token, enfants, etc ... du parent
       } else {
         res.json({ result: false, error: 'Parent not found or wrong information' });
       }
