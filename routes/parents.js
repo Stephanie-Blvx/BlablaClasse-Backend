@@ -50,6 +50,7 @@ router.post("/signup", (req, res) => {
         lastname: req.body.lastname,
         email: req.body.email,
         password: hash,
+        username: req.body.username,
         token: uid2(32),
         kids: [], // Initialisation sans enfant
         userType: "parent", // Ajouter userType comme 'parent'
@@ -96,6 +97,7 @@ router.post("/signin", (req, res) => {
             firstname: data.firstname,
             id: data.id,
             kids: data.kids,
+            username: data.username,
             userType: data.userType, // Inclure le type d'utilisateur dans la réponse
           });
         });
