@@ -83,6 +83,7 @@ router.post("/signin", (req, res) => {
         classes: data.classes,
         id: data.id,
         userType: data.userType,
+        isAdmin: data.isAdmin
       });
     } else {
       res.json({ result: false, error: "Teacher not found or wrong password" });
