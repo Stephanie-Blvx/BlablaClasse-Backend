@@ -12,6 +12,7 @@ var kidsRouter = require('./routes/kids');
 var eventsRouter = require('./routes/events');
 var classesRouter = require('./routes/classes');
 var menusRouter = require('./routes/menus');
+var actusRouter = require('./routes/actus');
 
 
 
@@ -40,5 +41,6 @@ app.use('/kids', kidsRouter);
 app.use('/events', eventsRouter);
 app.use('/classes', classesRouter);
 app.use('/menus', menusRouter);
+app.use('/actus', actusRouter);
 
 module.exports = app;
