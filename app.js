@@ -16,6 +16,7 @@ var actusRouter = require('./routes/actus');
 
 
 
+
 var app = express();
 const cors = require('cors');
 app.use(cors());
@@ -28,6 +29,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Log pour vérifier que les variables d'environnement sont chargées
+console.log('JWT_SECRET:', process.env.JWT_SECRET);
 
 app.use('/', indexRouter);
 app.use('/posts', postsRouter);
