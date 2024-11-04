@@ -13,6 +13,7 @@ const postSchema = mongoose.Schema({
   },
   classes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'classes' }], //plusieurs classes concernées possibles donc tableau d'id classes
   isRead: Boolean,
+  cloudinaryId: String,
 });
 
 const Post = mongoose.model('posts', postSchema);
