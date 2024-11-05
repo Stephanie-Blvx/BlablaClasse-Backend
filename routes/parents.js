@@ -268,22 +268,19 @@ console.log('Bonjour')
 //   }
 // });
 
-router.put('/change-password', authMiddleware, validateCurrentPassword, (req, res) => {
+router.put('/change-password', authMiddleware, validateCurrentPassword, async (req, res) => {
   const { newPassword } = req.body;
 
-  console.log('Nouveau mot de passe' + newPassword);
+  console.log('Nouveau mot de passe: ' + newPassword);
 
-  bcrypt.hash(newPassword, 5)
-    .then((hashedPassword) => {
-      req.parent.password = hashedPassword;
-      return req.parent.save();
-    })
-    .then(() => {
-      res.status(200).json({ result: true, message: 'Mot de passe mis à jour avec succès' });
-    })
-    .catch((error) => {
-      res.status(500).json({ result: false, error: 'Erreur lors de la mise à jour du mot de passe' });
-    });
+  try {
+    const hashedPassword = await bcrypt.hash(newPassword, 5);
+    req.parent.password = hashedPassword;
+    await req.parent.save();
+    res.status(200).json({ result: true, message: 'Mot de passe mis à jour avec succès' });
+  } catch (error) {
+    res.status(500).json({ result: false, error: 'Erreur lors de la mise à jour du mot de passe' });
+  }
 });
 //---------------------- Route pour changer l'email d'un parent ---------------------
 router.put("/change-email", (req, res) => {
