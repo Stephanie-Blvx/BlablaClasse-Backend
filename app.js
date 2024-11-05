@@ -4,7 +4,7 @@ require('./models/connection');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
-var indexRouter = require('./routes/index');
+var indexRouter = require('./routes/indexPauline');
 var postsRouter = require('./routes/posts');
 var parentsRouter = require('./routes/parents');
 var teachersRouter = require('./routes/teachers');
