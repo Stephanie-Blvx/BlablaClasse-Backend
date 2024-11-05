@@ -14,6 +14,18 @@ const pusher = new Pusher({
   useTLS: true,
 });
 
+
+router.get('/messages', async (req, res) => {
+  try {
+    const messages = await Messages.find().sort({ createdAt: 1 }); // Trier par date de création, du plus ancien au plus récent
+    res.json(messages); // Renvoyer les messages sous forme de JSON
+  } catch (error) {
+    console.error('Erreur lors de la récupération des messages :', error);
+    res.status(500).json({ result: false, error: 'Erreur serveur lors de la récupération des messages' });
+  }
+});
+
+
 //-------------------------   Joindre le chat  -------------------------
 router.put('/users/:username', async (req, res) => {
   const { username } = req.params; // Nom d'utilisateur
@@ -53,7 +65,7 @@ router.delete('/users/:username', async (req, res) => {
 });
 
 //-------------------------   Envoyer un message --------------------------------
-router.post('/message', async (req, res) => {
+router.post('/messages', async (req, res) => {
   const { text, username, userType } = req.body;
 
   // Enregistrer le message dans la base de données (vous devez avoir un modèle pour cela)
