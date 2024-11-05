@@ -14,7 +14,7 @@ const pusher = new Pusher({
   useTLS: true,
 });
 
-
+// -------------------------  Récupérer les messages -------------------------
 router.get('/messages', async (req, res) => {
   try {
     const messages = await Messages.find().sort({ createdAt: 1 }); // Trier par date de création, du plus ancien au plus récent
