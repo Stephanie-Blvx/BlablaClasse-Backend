@@ -12,7 +12,9 @@ var kidsRouter = require('./routes/kids');
 var eventsRouter = require('./routes/events');
 var classesRouter = require('./routes/classes');
 var menusRouter = require('./routes/menus');
-var tchatRouter = require('.../routes/tchat'); 
+var actusRouter = require('./routes/actus');
+
+
 
 
 var app = express();
@@ -28,6 +30,9 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Log pour vérifier que les variables d'environnement sont chargées
+console.log('JWT_SECRET:', process.env.JWT_SECRET);
+
 app.use('/', indexRouter);
 app.use('/posts', postsRouter);
 app.use('/parents', parentsRouter);
@@ -36,7 +41,6 @@ app.use('/kids', kidsRouter);
 app.use('/events', eventsRouter);
 app.use('/classes', classesRouter);
 app.use('/menus', menusRouter);
-app.use('/tchat', tchatRouter); 
-
+app.use('/actus', actusRouter);
 
 module.exports = app;

@@ -36,7 +36,20 @@ router.get('/', (req, res) => {
   })
 });
 
+// route pour delete un event 
 
+router.delete('/:id', (req, res) => {
+  const eventId = req.params.id;
+
+  Event.findByIdAndDelete(eventId)
+      .then(data => {
+          if (data) {
+              res.json({ result: true, message: 'Event deleted', event: data });
+          } else {
+              res.status(404).json({ result: false, error: 'Event not found' });
+          }
+      })
+});
 
 
 
