@@ -96,8 +96,7 @@ router.post("/signintoken", (req, res) => {
   Teacher.findOne({ token: req.body.token }) // Vérifie si le token existe dans la Collection Teachers
     // .populate('classes') //peuple le champ classes
     .then((data) => {
-      console.log("data retournée par la database:----------->", data);  // console.log la réponse de la database
-      console.log("data retournée par la database:----------->", data);  // console.log la réponse de la database
+          //console.log("data retournée par la database:----------->", data);  // console.log la réponse de la database
     if (data) {
       res.json({
         result: true,
