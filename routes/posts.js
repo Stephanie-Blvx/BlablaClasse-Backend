@@ -106,9 +106,7 @@ router.post('/', async (req, res) => {
       const newPost = new Post({
         title,
         content,
-        author_id : req.body.author_id,
-        author_username : req.body.author_username,
-        author_firstname : req.body.author_firstname,
+        author: JSON.parse(author),
         images: [resultCloudinary.secure_url], 
         cloudinaryId: resultCloudinary.public_id,
         creationDate: new Date(),
@@ -126,7 +124,7 @@ router.post('/', async (req, res) => {
       const newPost = new Post({
         title,
         content,
-        author,
+        author: JSON.parse(author),
         images: [], 
         cloudinaryId: null,
         creationDate: new Date(),
