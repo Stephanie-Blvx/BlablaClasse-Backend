@@ -94,7 +94,7 @@ router.delete('/:id', (req, res) => {
 
 // route pour ajouter un post avec ou sans image.
 router.post('/', async (req, res) => {
-
+const { author, title, content } = req.body
   const imagePost = `/tmp/${uniqid()}.jpg`
   const resultMove = await req.files.menuFromFront.mv(imagePost);
 
