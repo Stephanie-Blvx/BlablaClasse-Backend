@@ -94,13 +94,13 @@ router.delete('/:id', (req, res) => {
 
 // route pour ajouter un post avec ou sans image.
 router.post('/', async (req, res) => {
-  const photoPath = `./tmp/${uniqid()}.jpg`;
+  const photoPath = `/tmp/${uniqid()}.jpg`;
 
   try {
       // Vérifiez si une image a été fournie
       if (req.files && req.files.photoFromFront) {
           await req.files.photoFromFront.mv(photoPath);
-          
+
         // Upload de l'image sur Cloudinary
         const resultCloudinary = await cloudinary.uploader.upload(photoPath, {
           folder: 'PostsImages' 
