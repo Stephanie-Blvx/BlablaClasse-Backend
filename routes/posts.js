@@ -95,40 +95,64 @@ router.delete('/:id', (req, res) => {
 // route pour ajouter un post avec ou sans image.
 router.post('/', async (req, res) => {
   try {
+    // Vérification des données nécessaires dans la requête
+    const { title, content, author, classes } = req.body;
+    if (!title || !content || !author || !author.id || !author.username || !author.firstname) {
+      return res.status(400).json({ result: false, error: 'Le titre, le contenu et l\'auteur sont requis.' });
+    }
+
+    // Vérification si une image a été envoyée
     if (!req.files || !req.files.photoFromFront) {
       return res.status(400).json({ result: false, error: 'Aucune image envoyée.' });
     }
 
-    const postImage = `./tmp/${uniqid()}.jpg`; // Changer l'extension selon le format de l'image
-    const resultMove = await req.files.photoFromFront.mv(postImage);
+    // Si plusieurs images sont envoyées, les traiter une par une
+    const imageUrls = [];
+    for (const file of req.files.photoFromFront) {
+      const postImage = `./tmp/${uniqid()}.jpg`; // Vous pouvez ajuster le format en fonction du type d'image
 
-    if (resultMove) {
-      // Si le déplacement du fichier a échoué
-      return res.status(500).json({ result: false, error: 'Erreur lors du déplacement du fichier.' });
+      // Déplacer l'image téléchargée vers un fichier temporaire
+      const resultMove = await file.mv(postImage);
+      if (resultMove) {
+        return res.status(500).json({ result: false, error: 'Erreur lors du déplacement du fichier.' });
+      }
+
+      // Upload de l'image sur Cloudinary
+      const resultCloudinary = await cloudinary.uploader.upload(postImage, {
+        folder: 'PostsImages', // Dossier dans Cloudinary pour organiser les images
+        resource_type: 'image', // Assurez-vous que le fichier est bien une image
+      });
+
+      // Ajouter l'URL de l'image dans le tableau des images
+      imageUrls.push(resultCloudinary.secure_url);
+
+      // Supprimer le fichier temporaire après le téléchargement
+      fs.unlinkSync(postImage);
     }
 
-    // Envoi de l'image vers Cloudinary
-    const resultCloudinary = await cloudinary.uploader.upload(postImage, {
-      folder: 'posts', // Dossier dans Cloudinary pour organiser les images
-      resource_type: 'image',
-    });
-
-    // Enregistrer l'URL de l'image dans la base de données
-    const newPhoto = new Photo({
-      url: resultCloudinary.secure_url,
+    // Créer un nouvel objet de post avec l'image(s) et autres données
+    const newPost = new Post({
+      title,
+      content,
+      author, // L'auteur est directement passé, puisque c'est un objet avec id, username, firstname
       creationDate: new Date(),
+      images: imageUrls, // Ajouter l'URL(s) de l'image(s)
+      classes: classes || [], // Si aucune classe n'est passée, on laisse un tableau vide
+      isRead: false, // Valeur par défaut
     });
 
-    await newPhoto.save();
+    // Sauvegarder le post dans la base de données
+    await newPost.save();
 
-    // Suppression du fichier temporaire
-    fs.unlinkSync(postImage);
-
-    // Réponse à l'utilisateur avec l'URL de l'image
-    res.json({ result: true, url: resultCloudinary.secure_url });
+    // Réponse à l'utilisateur avec l'URL de l'image et les informations du post
+    res.json({
+      result: true,
+      message: 'Post créé avec succès!',
+      post: newPost,
+    });
 
   } catch (error) {
-    console.error('Erreur lors de l\'envoi de l\'image:', error);
+    console.error('Erreur lors de l\'envoi du formulaire:', error);
 
     // En cas d'erreur, supprimez toujours le fichier temporaire
     if (fs.existsSync(postImage)) {
