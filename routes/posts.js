@@ -94,30 +94,49 @@ router.delete('/:id', (req, res) => {
 
 // route pour ajouter un post avec ou sans image.
 router.post('/', async (req, res) => {
+  try {
+    if (!req.files || !req.files.photoFromFront) {
+      return res.status(400).json({ result: false, error: 'Aucune image envoyée.' });
+    }
 
-  const postImage = `./tmp/${uniqid()}.pdf`
-  const resultMove = await req.files.photoFromFront.mv(postImage);
+    const postImage = `./tmp/${uniqid()}.jpg`; // Changer l'extension selon le format de l'image
+    const resultMove = await req.files.photoFromFront.mv(postImage);
 
-  if (!resultMove) {
-    const resultCloudinary = await cloudinary.uploader.upload(postImage);
+    if (resultMove) {
+      // Si le déplacement du fichier a échoué
+      return res.status(500).json({ result: false, error: 'Erreur lors du déplacement du fichier.' });
+    }
 
-  const newPhoto = new Photo({
-    url:resultCloudinary.secure_url,
-    creationDate: new Date(),
-  });
+    // Envoi de l'image vers Cloudinary
+    const resultCloudinary = await cloudinary.uploader.upload(postImage, {
+      folder: 'posts', // Dossier dans Cloudinary pour organiser les images
+      resource_type: 'image',
+    });
 
-  newPhoto.save()
-    .then(savedPhoto => {
-      res.json({ result: true, url: resultCloudinary.secure_url });
-      //res.json({ success: true, menu: savedPhoto});
-    })
+    // Enregistrer l'URL de l'image dans la base de données
+    const newPhoto = new Photo({
+      url: resultCloudinary.secure_url,
+      creationDate: new Date(),
+    });
 
-  } else {
-    res.json({ result: false, error: resultMove });
+    await newPhoto.save();
+
+    // Suppression du fichier temporaire
+    fs.unlinkSync(postImage);
+
+    // Réponse à l'utilisateur avec l'URL de l'image
+    res.json({ result: true, url: resultCloudinary.secure_url });
+
+  } catch (error) {
+    console.error('Erreur lors de l\'envoi de l\'image:', error);
+
+    // En cas d'erreur, supprimez toujours le fichier temporaire
+    if (fs.existsSync(postImage)) {
+      fs.unlinkSync(postImage);
+    }
+
+    res.status(500).json({ result: false, error: 'Erreur interne du serveur.' });
   }
-
-  fs.unlinkSync(postImage);
 });
-
 
 module.exports = router;
