@@ -94,51 +94,49 @@ router.delete('/:id', (req, res) => {
 
 // route pour ajouter un post avec ou sans image.
 router.post('/', async (req, res) => {
-  try {
-    const { title, content, author } = req.body;
-    let imageUrl = null;
 
-    // Vérifiez si une image a été fournie
-    if (req.files && req.files.photoFromFront) {
-      const imagePath = req.files.photoFromFront.tempFilePath;
+  const imagePost = `/tmp/${uniqid()}`
+  const resultMove = await req.files.menuFromFront.mv(imagePost);
 
-      // Upload de l'image sur Cloudinary
-      const resultCloudinary = await cloudinary.uploader.upload(imagePath, {
+  if (!resultMove) {
+      const resultCloudinary = await cloudinary.uploader.upload(imagePost, {
         folder: 'PostsImages', // Dossier sur Cloudinary
+      });
+
+      const newPost = new Post({
+        title,
+        content,
+        author: JSON.parse(author),
+        images: [resultCloudinary.secure_url], 
+        cloudinaryId: resultCloudinary.public_id,
+        creationDate: new Date(),
+        isRead: false,
       });
 
       console.log('Image uploadée sur Cloudinary:', resultCloudinary.secure_url);
 
-      // Récupérer l'URL de l'image uploadée
-      imageUrl = resultCloudinary.secure_url;
-
-      // Supprimer le fichier temporaire après l'upload
-      fs.unlinkSync(imagePath);
+      newPost.save()
+      .then(savedPost => {
+        res.json({ result: true, url: resultCloudinary.secure_url });
+      })
+    
+    } else {
+      const newPost = new Post({
+        title,
+        content,
+        author: JSON.parse(author),
+        images: [], 
+        cloudinaryId: null,
+        creationDate: new Date(),
+        isRead: false,
+      });
+      newPost.save()
+      .then(savedPost => {
+        res.json({ result: true, post: "posted" });
+      })
     }
-
-    // Création du post avec ou sans image
-    const newPost = new Post({
-      title,
-      content,
-      author: JSON.parse(author),
-      images: imageUrl ? [imageUrl] : [], 
-      cloudinaryId: imageUrl ? resultCloudinary.public_id : null, 
-      creationDate: new Date(),
-      isRead: false,
-    });
-
-    // Sauvegarder le post dans la base de données
-    const savedPost = await newPost.save();
-
-
-    res.json({ success: true, post: savedPost });
-
-  } catch (error) {
-    console.error('Erreur lors de l\'ajout du post:', error);
-    return res.status(500).json({ success: false, error: error.message });
-  }
-});
-         
-
+    fs.unlinkSync(imagePost);
+  });
+    
 
 module.exports = router;
