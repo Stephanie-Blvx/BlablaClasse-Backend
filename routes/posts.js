@@ -93,30 +93,33 @@ router.delete('/:id', (req, res) => {
 
 
 // route pour ajouter un post avec ou sans image.
-router.post('/', async (req, res) => {
+router.post('/', (req, res) => {
   const { title, content, author } = req.body;
-  
+
+  // Vérification si les champs title, content et author sont présents
   if (!title || !content || !author) {
     return res.status(400).json({ result: false, error: "Le titre, le contenu et l'auteur sont requis." });
   }
 
-  try {
-    // Processus d'ajout du post
-    const newPost = new Post({
-      title,
-      content,
-      author, // Assurez-vous que 'author' est bien un objet contenant les informations nécessaires
-      creationDate: new Date(),
-    });
+  // Création d'un nouveau post avec les données reçues
+  const newPost = new Post({
+    title,
+    content,
+    author, // L'objet author devrait être un objet avec les infos comme { id, username, firstname }
+    creationDate: new Date(),
+  });
 
-    // Sauvegarder le post
-    const savedPost = await newPost.save();
-    
-    res.status(201).json({ result: true, post: savedPost });
-  } catch (error) {
-    console.error("Erreur lors de la création du post:", error);
-    res.status(500).json({ result: false, error: "Erreur lors de la création du post." });
-  }
+  // Sauvegarde du nouveau post dans la base de données
+  newPost.save()
+    .then(savedPost => {
+      // Si le post est bien sauvegardé, renvoyer le résultat avec le post
+      res.status(201).json({ result: true, post: savedPost });
+    })
+    .catch(error => {
+      // Gestion des erreurs lors de la sauvegarde
+      console.error("Erreur lors de la création du post:", error);
+      res.status(500).json({ result: false, error: "Erreur lors de la création du post." });
+    });
 });
 
 module.exports = router;
