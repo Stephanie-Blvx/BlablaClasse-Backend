@@ -106,7 +106,7 @@ router.post('/', async (req, res) => {
       const newPost = new Post({
         title,
         content,
-        author: JSON.parse(author),
+        author,
         images: [resultCloudinary.secure_url], 
         cloudinaryId: resultCloudinary.public_id,
         creationDate: new Date(),
