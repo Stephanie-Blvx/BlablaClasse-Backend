@@ -94,72 +94,28 @@ router.delete('/:id', (req, res) => {
 
 // route pour ajouter un post avec ou sans image.
 router.post('/', async (req, res) => {
+  const { title, content, author } = req.body;
+  
+  if (!title || !content || !author) {
+    return res.status(400).json({ result: false, error: "Le titre, le contenu et l'auteur sont requis." });
+  }
+
   try {
-    // Vérification des données nécessaires dans la requête
-    const { title, content, author, classes } = req.body;
-    if (!title || !content || !author || !author.id || !author.username || !author.firstname) {
-      return res.status(400).json({ result: false, error: 'Le titre, le contenu et l\'auteur sont requis.' });
-    }
-
-    // Vérification si une image a été envoyée
-    if (!req.files || !req.files.photoFromFront) {
-      return res.status(400).json({ result: false, error: 'Aucune image envoyée.' });
-    }
-
-    // Si plusieurs images sont envoyées, les traiter une par une
-    const imageUrls = [];
-    for (const file of req.files.photoFromFront) {
-      const postImage = `./tmp/${uniqid()}.jpg`; // Vous pouvez ajuster le format en fonction du type d'image
-
-      // Déplacer l'image téléchargée vers un fichier temporaire
-      const resultMove = await file.mv(postImage);
-      if (resultMove) {
-        return res.status(500).json({ result: false, error: 'Erreur lors du déplacement du fichier.' });
-      }
-
-      // Upload de l'image sur Cloudinary
-      const resultCloudinary = await cloudinary.uploader.upload(postImage, {
-        folder: 'PostsImages', // Dossier dans Cloudinary pour organiser les images
-        resource_type: 'image', // Assurez-vous que le fichier est bien une image
-      });
-
-      // Ajouter l'URL de l'image dans le tableau des images
-      imageUrls.push(resultCloudinary.secure_url);
-
-      // Supprimer le fichier temporaire après le téléchargement
-      fs.unlinkSync(postImage);
-    }
-
-    // Créer un nouvel objet de post avec l'image(s) et autres données
+    // Processus d'ajout du post
     const newPost = new Post({
       title,
       content,
-      author, // L'auteur est directement passé, puisque c'est un objet avec id, username, firstname
+      author, // Assurez-vous que 'author' est bien un objet contenant les informations nécessaires
       creationDate: new Date(),
-      images: imageUrls, // Ajouter l'URL(s) de l'image(s)
-      classes: classes || [], // Si aucune classe n'est passée, on laisse un tableau vide
-      isRead: false, // Valeur par défaut
     });
 
-    // Sauvegarder le post dans la base de données
-    await newPost.save();
-
-    // Réponse à l'utilisateur avec l'URL de l'image et les informations du post
-    res.json({
-      result: true,
-      message: 'Post créé avec succès!',
-      post: newPost,
-    });
-
+    // Sauvegarder le post
+    const savedPost = await newPost.save();
+    
+    res.status(201).json({ result: true, post: savedPost });
   } catch (error) {
-    console.error('Erreur lors de l\'envoi du formulaire:', error);
-
-    // En cas d'erreur, supprimez toujours le fichier temporaire
-    if (fs.existsSync(postImage)) {
-      fs.unlinkSync(postImage);
-    }
-
-    res.status(500).json({ result: false, error: 'Erreur interne du serveur.' });
+    console.error("Erreur lors de la création du post:", error);
+    res.status(500).json({ result: false, error: "Erreur lors de la création du post." });
   }
 });
 
