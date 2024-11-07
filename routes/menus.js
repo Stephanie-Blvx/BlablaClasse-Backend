@@ -9,7 +9,7 @@ const fs = require('fs');
 //upload menu teacher
 router.post('/', async (req, res) => {
 
-  const menu = `./tmp/${uniqid()}.pdf`
+  const menu = `/tmp/${uniqid()}.jpg`
   const resultMove = await req.files.menuFromFront.mv(menu);
 
   if (!resultMove) {
