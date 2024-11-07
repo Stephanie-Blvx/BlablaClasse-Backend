@@ -94,59 +94,51 @@ router.delete('/:id', (req, res) => {
 
 // route pour ajouter un post avec ou sans image.
 router.post('/', async (req, res) => {
-  const photoPath = `./tmp/${uniqid()}.jpg`;
-
   try {
-      // Vérifiez si une image a été fournie
-      if (req.files && req.files.photoFromFront) {
-          await req.files.photoFromFront.mv(photoPath);
+    const { title, content, author } = req.body;
+    let imageUrl = null;
 
-        // Upload de l'image sur Cloudinary
-        const resultCloudinary = await cloudinary.uploader.upload(photoPath, {
-          folder: 'PostsImages' 
+    // Vérifiez si une image a été fournie
+    if (req.files && req.files.photoFromFront) {
+      const imagePath = req.files.photoFromFront.tempFilePath;
+
+      // Upload de l'image sur Cloudinary
+      const resultCloudinary = await cloudinary.uploader.upload(imagePath, {
+        folder: 'PostsImages', // Dossier sur Cloudinary
       });
-        console.log('Image uploadée sur Cloudinary:', resultCloudinary.secure_url);
 
-          // Création du post avec image
-          const newPost = new Post({
-              title: req.body.title,
-              content: req.body.content,
-              author: JSON.parse(req.body.author),
-              images: [resultCloudinary.secure_url],
-              cloudinaryId: resultCloudinary.public_id,
-              creationDate: new Date(),
-              isRead: false,
-          });
-          //sauvegarde du post
+      console.log('Image uploadée sur Cloudinary:', resultCloudinary.secure_url);
 
-          await newPost.save();
-          res.json({ success: true, post: newPost });
-      } else {
-         
-        // Création du post sans image
-          const newPost = new Post({
-              title: req.body.title,
-              content: req.body.content,
-              author: JSON.parse(req.body.author),
-              creationDate: new Date(),
-              isRead: false,
-          });
+      // Récupérer l'URL de l'image uploadée
+      imageUrl = resultCloudinary.secure_url;
 
-          await newPost.save();
-          res.json({ success: true, post: newPost });
-      }
+      // Supprimer le fichier temporaire après l'upload
+      fs.unlinkSync(imagePath);
+    }
+
+    // Création du post avec ou sans image
+    const newPost = new Post({
+      title,
+      content,
+      author: JSON.parse(author),
+      images: imageUrl ? [imageUrl] : [], 
+      cloudinaryId: imageUrl ? resultCloudinary.public_id : null, 
+      creationDate: new Date(),
+      isRead: false,
+    });
+
+    // Sauvegarder le post dans la base de données
+    const savedPost = await newPost.save();
+
+
+    res.json({ success: true, post: savedPost });
+
   } catch (error) {
-      console.error('Erreur lors de l\'ajout du post:', error);
-      return res.status(500).json({ success: false, error: error.message });
-  } finally {
-      // Vérifiez si le fichier temporaire existe avant de le supprimer
-      if (fs.existsSync(photoPath)) {
-          fs.unlinkSync(photoPath);
-      } else {
-          console.warn('Le fichier temporaire n\'existe pas:', photoPath); //Ajout  pour débogage
-      }
+    console.error('Erreur lors de l\'ajout du post:', error);
+    return res.status(500).json({ success: false, error: error.message });
   }
 });
+         
 
 
 module.exports = router;
