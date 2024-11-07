@@ -7,7 +7,7 @@ const postSchema = mongoose.Schema({
   images: [String], //plusieurs images possibles donc tableau
   creationDate: Date,
   author: { 
-    id: { type: mongoose.Schema.Types.ObjectId, ref: 'teachers', required: true }, 
+    token: { type: String, ref: 'teachers', required: true }, 
     username: { type: String, required: true }, 
     firstname: { type: String, required: true } 
   },
