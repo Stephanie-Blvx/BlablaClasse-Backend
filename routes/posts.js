@@ -94,7 +94,8 @@ router.delete('/:id', (req, res) => {
 
 // route pour ajouter un post avec ou sans image.
 router.post('/', async (req, res) => {
-const { author, title, content } = req.body
+const { title, content } = req.body
+const author = {id: author_id, username: author_username, firstname: author_firstname}
   const imagePost = `/tmp/${uniqid()}.jpg`
   const resultMove = await req.files.menuFromFront.mv(imagePost);
 
@@ -106,7 +107,7 @@ const { author, title, content } = req.body
       const newPost = new Post({
         title,
         content,
-        author: JSON.parse(author),
+        author: author,
         images: [resultCloudinary.secure_url], 
         cloudinaryId: resultCloudinary.public_id,
         creationDate: new Date(),
