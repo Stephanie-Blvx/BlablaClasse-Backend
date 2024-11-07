@@ -7,7 +7,6 @@
     }],
     "routes": [{
       "src": "/(.*)",
-      "dest": "app.js",
-      "maxDuration": 20
+      "dest": "app.js"
     }]
    }

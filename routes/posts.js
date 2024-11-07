@@ -143,7 +143,7 @@ router.post('/', async (req, res) => {
       if (fs.existsSync(photoPath)) {
           fs.unlinkSync(photoPath);
       } else {
-          console.warn('Le fichier temporaire n\'existe pas:', photoPath); //Ajout de condifitions pour débogage
+          console.warn('Le fichier temporaire n\'existe pas:', photoPath); //Ajout  pour débogage
       }
   }
 });
