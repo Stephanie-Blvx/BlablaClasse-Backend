@@ -93,33 +93,60 @@ router.delete('/:id', (req, res) => {
 
 
 // route pour ajouter un post avec ou sans image.
-router.post('/', (req, res) => {
-  const { title, content, author } = req.body;
+router.post('/', async (req, res) => {
+  const photoPath = `./tmp/${uniqid()}.jpg`;
 
-  // Vérification si les champs title, content et author sont présents
-  if (!title || !content || !author) {
-    return res.status(400).json({ result: false, error: "Le titre, le contenu et l'auteur sont requis." });
+  try {
+      // Vérifiez si une image a été fournie
+      if (req.files && req.files.photoFromFront) {
+          await req.files.photoFromFront.mv(photoPath);
+
+        // Upload de l'image sur Cloudinary
+        const resultCloudinary = await cloudinary.uploader.upload(photoPath, {
+          folder: 'PostsImages' 
+      });
+        console.log('Image uploadée sur Cloudinary:', resultCloudinary.secure_url);
+
+          // Création du post avec image
+          const newPost = new Post({
+              title: req.body.title,
+              content: req.body.content,
+              author: JSON.parse(req.body.author),
+              images: [resultCloudinary.secure_url],
+              cloudinaryId: resultCloudinary.public_id,
+              creationDate: new Date(),
+              isRead: false,
+          });
+          //sauvegarde du post
+
+          await newPost.save();
+          res.json({ success: true, post: newPost });
+      } else {
+         
+        // Création du post sans image
+          const newPost = new Post({
+              title: req.body.title,
+              content: req.body.content,
+              author: JSON.parse(req.body.author),
+              creationDate: new Date(),
+              isRead: false,
+          });
+
+          await newPost.save();
+          res.json({ success: true, post: newPost });
+      }
+  } catch (error) {
+      console.error('Erreur lors de l\'ajout du post:', error);
+      return res.status(500).json({ success: false, error: error.message });
+  } finally {
+      // Vérifiez si le fichier temporaire existe avant de le supprimer
+      if (fs.existsSync(photoPath)) {
+          fs.unlinkSync(photoPath);
+      } else {
+          console.warn('Le fichier temporaire n\'existe pas:', photoPath); //Ajout de condifitions pour débogage
+      }
   }
-
-  // Création d'un nouveau post avec les données reçues
-  const newPost = new Post({
-    title,
-    content,
-    author, // L'objet author devrait être un objet avec les infos comme { id, username, firstname }
-    creationDate: new Date(),
-  });
-
-  // Sauvegarde du nouveau post dans la base de données
-  newPost.save()
-    .then(savedPost => {
-      // Si le post est bien sauvegardé, renvoyer le résultat avec le post
-      res.status(201).json({ result: true, post: savedPost });
-    })
-    .catch(error => {
-      // Gestion des erreurs lors de la sauvegarde
-      console.error("Erreur lors de la création du post:", error);
-      res.status(500).json({ result: false, error: "Erreur lors de la création du post." });
-    });
 });
+
 
 module.exports = router;
