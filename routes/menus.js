@@ -6,40 +6,38 @@ const cloudinary = require('cloudinary').v2;
 const uniqid = require('uniqid');
 const fs = require('fs');
 
-//upload menu teacher
+//------------------------- Route pour upload menu (tunnel enseignant admin) -------------------------
 router.post('/', async (req, res) => {
 
-  const menu = `/tmp/${uniqid()}.jpg`
-  const resultMove = await req.files.menuFromFront.mv(menu);
+  const menu = `/tmp/${uniqid()}.jpg` // Création d'un nom de fichier unique pour le menu à partir de la librairie uniqid  
+  const resultMove = await req.files.menuFromFront.mv(menu); // Mise à jour du menu sur le serveur avec le fichier envoyé depuis le front 
 
-  if (!resultMove) {
-    const resultCloudinary = await cloudinary.uploader.upload(menu);
+  if (!resultMove) { // Si le fichier a été correctement déplacé sur le serveur
+    const resultCloudinary = await cloudinary.uploader.upload(menu); // Upload du menu sur Cloudinary 
 
-  const newMenu = new Menu({
-    url:resultCloudinary.secure_url,
-    creationDate: new Date(),
+  const newMenu = new Menu({ // Création d'une nouvelle instance de la classe Menu
+    url:resultCloudinary.secure_url, // URL du menu sur Cloudinary 
+    creationDate: new Date(), // Date de création du menu
   });
 
-  newMenu.save()
-    .then(savedMenu => {
-      res.json({ result: true, url: resultCloudinary.secure_url });
-      //res.json({ success: true, menu: savedMenu });
+  newMenu.save() // Sauvegarde du menu dans la base de données
+    .then(savedMenu => { // Résultat de la sauvegarde
+      res.json({ result: true, url: resultCloudinary.secure_url }); // Envoi de la réponse avec l'URL du menu
     })
-
   } else {
-    res.json({ result: false, error: resultMove });
+    res.json({ result: false, error: resultMove }); // Envoi d'une erreur si le fichier n'a pas été correctement déplacé
   }
 
-  fs.unlinkSync(menu);
+  fs.unlinkSync(menu); // Suppression du fichier temporaire sur le serveur après l'upload sur Cloudinary 
 });
 
-//download menu Parent
+//------------------------- Route pour download menu (tunnel parent) -------------------------
 router.get('/', (req, res) => {
-  Menu.findOne() 
-    .sort({ creationDate: -1 })
+  Menu.findOne()  // Recherche du dernier menu dans la base de données
+    .sort({ creationDate: -1 }) // Tri par date de création décroissante pour récupérer le dernier menu enregistré en premier
     .then(data => {
       if (data) {
-        res.json({ result: true, menu: data });
+        res.json({ result: true, menu: data }); // Envoi du menu en JSON si trouvé dans la base de données 
       } else {
         res.json({ result: false, error: 'No menu found' });
       }
@@ -48,8 +46,5 @@ router.get('/', (req, res) => {
       res.json({ result: false, error: error.message });
     });
 });
-
-
-
 
 module.exports = router;

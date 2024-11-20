@@ -132,25 +132,6 @@ router.delete("/:id", (req, res) => {
   });
 });
 
-//---------------------- Route pour mettre à jour un teacher par son id ---------------------
-// router.put("/:id", (req, res) => {
-//   // Vérifie si les champs requis sont présents dans la requête
-//   if (!checkBody(req.body, ["email", "password"])) {
-//     return res.json({ result: false, error: "Missing or empty fields" });
-//   }
-
-//   // Recherche et mise à jour du teacher par son id
-//   Teacher.findByIdAndUpdate(req.params.id, req.body, { new: true }).then(
-//     (updatedTeacher) => {
-//       if (updatedTeacher) {
-//         res.json({ result: true, teacher: updatedTeacher });
-//       } else {
-//         res.json({ result: false, error: "Teacher not found" });
-//       }
-//     }
-//   );
-// });
-
 
 //---------------------- Route pour changer le mot de passe d'un teacher ---------------------
 router.put("/change-password", (req, res) => {

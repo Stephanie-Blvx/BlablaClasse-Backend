@@ -7,7 +7,7 @@ const parentSchema = mongoose.Schema({
   password: String,
   token: String,
   username: String,
-  userType: { type: String, default: "parent" },
+  userType: { type: String, default: "parents" },
   kids: [{ type: mongoose.Schema.Types.ObjectId, ref: "kids" }], //plusieurs enfants possibles à priori donc tableau d'id kids
 });
 

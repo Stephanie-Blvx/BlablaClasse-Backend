@@ -8,9 +8,8 @@ const teacherSchema = mongoose.Schema({
     password: String,
     token: String,
     isAdmin: Boolean,
-    userType: { type: String, default: "teacher" },
-    classes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'class' }],//plusieurs kids donc tableau d'id kids
-
+    userType: { type: String, default: "teachers" },
+    classes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'classes' }],//plusieurs kids donc tableau d'id kids
 });
 
 const Teacher = mongoose.model('teachers', teacherSchema);
