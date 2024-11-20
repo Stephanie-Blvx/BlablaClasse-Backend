@@ -7,7 +7,6 @@ const bcrypt = require("bcrypt");
 const authMiddleware = require('../middlewares/authMiddleware');
 const validateCurrentPassword = require('../middlewares/validateCurrentPassword');
 const jwt = require('jsonwebtoken');
-const { token } = require("morgan");
 
 //-------------------------  Route pour récupérer tous les parents -------------------------
 router.get("/", (req, res) => {
@@ -101,17 +100,6 @@ router.post("/signin", (req, res) => {
             userType: data.userType, // Inclure le type d'utilisateur dans la réponse
           });
         });
-        // Vérifie si le parent existe et si le mot de passe est correct
-        // res.json({
-        //   result: true,
-        //   token: data.token,
-        //   email: data.email,
-        //   lastname: data.lastname,
-        //   firstname: data.firstname,
-        //   id: data.id,
-        //   kids: data.kids,
-        //   userType: data.userType, // Inclure le type d'utilisateur dans la réponse
-        // }); // la route retourne email, token, enfants du parent
       } else {
         // Si le parent n'est pas trouvé ou si le mot de passe est incorrect
         res.json({
@@ -167,25 +155,6 @@ router.put("/add-child/:parentId/:kidId", (req, res) => {
     });
 });
 
-//----------------------Route pour mettre à jour un parent par son id------------------------
-// router.put('/:id', (req, res) => {
-//   // Vérifie si les champs requis sont présents dans la requête
-//   if (!checkBody(req.body, ['email', 'password'])) {
-//     return res.json({ result: false, error: 'Missing or empty fields' });
-//   }
-
-//   // Recherche et mise à jour du parent par son id
-//   Parent.findByIdAndUpdate(req.params.id, req.body, { new: true })
-//     .then(updatedParent => {
-//       if (updatedParent) {
-//         res.json({ result: true, parent: updatedParent });
-//       } else {
-//         res.json({ result: false, error: 'Parent not found' });
-//       }
-//     })
-// });
-//----------------------Route pour mettre à jour un parent par son id----------------
-
 //-------------------------  Route pour supprimer un parent par son id -------------------------
 router.delete("/:id", (req, res) => {
   // Recherche et suppression du parent par son id
@@ -202,72 +171,7 @@ router.delete("/:id", (req, res) => {
     });
 });
 
-//---------------------- Route pour changer le mot de passe d'un parent ---------------------
-// router.put("/change-password", (req, res) => {
-//   const { parentId, currentPassword, newPassword } = req.body; // Récupère l'ID du parent, le mot de passe actuel et le nouveau mot de passe
-//   const authToken = req.headers["authorization"]?.split(" ")[1]; // Récupère le token
-
-//   // Vérifiez que l'ID, le mot de passe actuel et le nouveau mot de passe sont présents
-//   if (!parentId || !currentPassword || !newPassword) {
-//     return res
-//       .status(400)
-//       .json({ result: false, error: "Informations manquantes" });
-//   }
-
-//   // Trouver le parent par son ID
-//   Parent.findById(parentId) // Recherche du parent par son ID
-//     .then((parent) => {
-//       // parent est le parent trouvé
-//       if (!parent) {
-//         // Si le parent n'est pas trouvé
-//         return res
-//           .status(404)
-//           .json({ result: false, error: "Parent non trouvé" });
-//       }
-
-//       // Vérifiez si le token est correct
-//       if (parent.token !== authToken) {
-//         // Si le token ne correspond pas à celui du parent
-//         return res.status(401).json({ result: false, error: "Token invalide" });
-//       }
-
-//       // Vérifiez le mot de passe actuel
-//       if (!bcrypt.compareSync(currentPassword, parent.password)) {
-//         return res
-//           .status(401)
-//           .json({ result: false, error: "Mot de passe actuel incorrect" });
-//       }
-
-//       // Hachage du nouveau mot de passe
-//       parent.password = bcrypt.hashSync(newPassword, 10); // Hache le nouveau mot de passe
-//       return parent.save(); // Sauvegarde les modifications
-//     })
-//     .then(() =>
-//       res
-//         .status(200)
-//         .json({ result: true, message: "Mot de passe mis à jour avec succès" })
-//     )
-//     .catch(() =>
-//       res.status(500).json({
-//         result: false,
-//         error: "Erreur lors de la mise à jour du mot de passe",
-//       })
-//     );
-// });
-console.log('Bonjour')
-// router.put('/change-password', authMiddleware, validateCurrentPassword, async (req, res) => {
-//   const { newPassword } = req.body;
-
-//   console.log('Nouveau mot de passe' + newPassword);
-//   try {
-//     req.parent.password = await bcrypt.hash(newPassword, 5);
-//     await req.parent.save();
-//     res.status(200).json({ result: true, message: 'Mot de passe mis à jour avec succès' });
-//   } catch (error) {
-//     res.status(500).json({ result: false, error: 'Erreur lors de la mise à jour du mot de passe' });
-//   }
-// });
-
+//---------------------- Route pour changer le password ---------------------
 router.put('/change-password', authMiddleware, validateCurrentPassword, async (req, res) => {
   const { newPassword } = req.body;
 
